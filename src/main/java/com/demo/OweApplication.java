@@ -55,28 +55,28 @@ public class OweApplication {
     		dao.excuteSql(" CREATE VIEW  gid_ls  AS SELECT groupid,stattime FROM  `owe_gh_tmp` GROUP BY groupid HAVING COUNT(DISTINCT stattime)=1 AND stattime='"+mon+"' ;"); //只欠当前一月账期的用户
     		dao.excuteSql(" DELETE FROM  owe_gh_tmp WHERE groupid IN ( SELECT groupid FROM gid_ls ) "); //删除
     		dao.excuteSql("  DROP VIEW IF exists gid_ls; "); //清空临时表
-    		dao.excuteSql(" CREATE VIEW  gid_ls  AS select DISTINCT groupid from qianfei_all_201702_guhua where stattime in("+MyDateUtils.getFourMonth(mon)+");");
-    		dao.excuteSql(" DELETE FROM  owe_gh_tmp WHERE groupid IN ( SELECT groupid FROM gid_ls ) ");//删除四个月内无欠款的用户
-      		dao.excuteSql("  DROP VIEW IF EXISTS owe_gh_view_last;	  ");                //上个月的总数据
-    		dao.excuteSql(" CREATE VIEW owe_gh_view_last AS "
+    		dao.excuteSql(" CREATE VIEW  gid_ls  AS select DISTINCT groupid from owe_gh_tmp where stattime  NOT in("+MyDateUtils.getFourMonth(mon)+");");
+    		dao.excuteSql(" DELETE FROM  owe_gh_tmp WHERE groupid  IN ( SELECT groupid FROM gid_ls ) ");//删除四个月内无欠款的用户
+      		dao.excuteSql("  DROP table IF EXISTS owe_gh"+mon+"_last;	  ");                //上个月的总数据
+    		dao.excuteSql(" CREATE table owe_gh"+mon+"_last AS "
                             +"SELECT groupid lid, SUM(bill_three_qf) lsum ,GROUP_CONCAT(DISTINCT stattime ORDER BY stattime) ltime"
                             + "  FROM owe_gh_tmp  WHERE  stattime<>'"+mon+"'  GROUP BY groupid ");   
-    		dao.excuteSql("  DROP VIEW IF EXISTS owe_gh_view_now;	  ");				 //本月的总数据		 	
-    		dao.excuteSql(" CREATE VIEW owe_gh_view_now AS "
+    		dao.excuteSql("  DROP table IF EXISTS owe_gh"+mon+"_now;	  ");				 //本月的总数据		 	
+    		dao.excuteSql(" CREATE table owe_gh"+mon+"_now AS "
     				+"SELECT groupid nid, SUM(bill_three_qf) nsum ,GROUP_CONCAT(DISTINCT stattime ORDER BY stattime) ntime"
     				+ "  FROM owe_gh_tmp    GROUP BY groupid ");   
-    		dao.excuteSql(" DROP VIEW IF EXISTS owe_jth_view_last;	 ");
-    		dao.excuteSql(" CREATE VIEW owe_jth_view_last AS "
+    		dao.excuteSql(" DROP table IF EXISTS owe_jth"+mon+"_last;	 ");
+    		dao.excuteSql(" CREATE table owe_jth"+mon+"_last AS "
                     +"SELECT groupid lid, SUM(bill_three_qf) lsum ,GROUP_CONCAT(DISTINCT stattime ORDER BY stattime) ltime"
                     + "  FROM owe_jth_tmp  WHERE  stattime<>'"+mon+"'  GROUP BY groupid ");   
-    		dao.excuteSql("  DROP VIEW IF EXISTS owe_jth_view_now;	  ");				 //本月的总数据		 	
-    		dao.excuteSql(" CREATE VIEW owe_jth_view_now AS "
+    		dao.excuteSql("  DROP table IF EXISTS owe_jth"+mon+"_now;	  ");				 //本月的总数据		 	
+    		dao.excuteSql(" CREATE table owe_jth"+mon+"_now AS "
 			+"SELECT groupid nid, SUM(bill_three_qf) nsum ,GROUP_CONCAT(DISTINCT stattime ORDER BY stattime) ntime"
-			+ "  FROM owe_jth_tmp    GROUP BY groupid ");      		
-    		
-    		List<Analyze> gh=dao.selectAnalyze("gh");
+			+ "  FROM owe_jth_tmp    GROUP BY groupid ");
+    		System.out.println("over!");
+    		List<Analyze> gh=dao.selectAnalyze("gh"+mon,"gh"+MyDateUtils.getLastMon(mon));
     		MyExcelUtils.writeToExcel(changeListToArr(gh), "固话欠费-上月本月对比("+mon+"经分).xlsx");
-    		List<Analyze> jth=dao.selectAnalyze("jth");
+    		List<Analyze> jth=dao.selectAnalyze("jth"+mon,"jth"+MyDateUtils.getLastMon(mon));
     		MyExcelUtils.writeToExcel(changeListToArr(jth),"集团号欠费-上月本月对比("+mon+"经分).xlsx");
     		System.out.println("All Finished:"+(System.currentTimeMillis()-start));
     		
@@ -134,12 +134,12 @@ public class OweApplication {
 	
 		public static List<String[]> changeListToArr(List<Analyze> list){
 			 List<String[]>  arr=new LinkedList<String[]>();
-			 String[] names={"受理号码","上月欠费金额","上月欠费账期","本月欠费金额","本月欠费账期","本月与上月重合账期欠费金额","本月与上月重合账期"};
+			 String[] names={"受理号码","上月欠费金额","上月欠费账期","本月欠费金额","本月欠费账期","本月与上月重合账期欠费金额","本月与上月重合账期","差值(上月欠费金额-本月与上月重合账期欠费金额)"};
 			 String[] analyzes=null;
 		
 			 arr.add(names);
 			 for(Analyze a:list){
-				 analyzes=new String[7];
+				 analyzes=new String[8];
 				 analyzes[0]=a.getId();
 				 analyzes[1]=a.getLsum()+"";
 				 analyzes[2]=a.getLtime()+"";
@@ -147,6 +147,7 @@ public class OweApplication {
 				 analyzes[4]=a.getNtime()+"";
 				 analyzes[5]=a.getSum()+"";
 				 analyzes[6]=a.getTime()+"";
+				 analyzes[7]=a.getS()+"";
 				 arr.add(analyzes);
 			 }
 			return arr;

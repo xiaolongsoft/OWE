@@ -10,7 +10,7 @@ import com.demo.entity.Bill;
 public interface BillDao {
 				//插入全量数据
 			 Integer  insertBills(List<Bill> bills);
-			 List<Analyze>  selectAnalyze(@Param(value="table")String table);
+			 List<Analyze>  selectAnalyze(@Param(value="table")String table,@Param(value="table0")String table0);
 			 //清空表
 			 void excuteSql(@Param(value="sql")String sql);
 			 

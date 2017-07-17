@@ -38,7 +38,34 @@ public class MyDateUtils {
 		        }
 		        return sb.toString();
 				
-				
+			}
+			/**
+			 * 返回上一个月日期
+			 * @param mon
+			 * @return
+			 */
+			public  static String getLastMon(String month){
+		        SimpleDateFormat formatter;
+		        
+		        formatter = new SimpleDateFormat ("yyyyMM"); 
+		        Date aa=new Date();
+				try {
+					aa = formatter.parse(month);
+				} catch (ParseException e) {
+					e.printStackTrace();
+				}
+		        Calendar cal_1=Calendar.getInstance();//获取当前日期 
+		        cal_1.setTime(aa);
+		        cal_1.add(Calendar.MONTH, -1);
+		        int m=cal_1.get(Calendar.MONTH)+1;
+		        StringBuilder sb=new StringBuilder("");
+	        	sb.append(cal_1.get(Calendar.YEAR));
+	        	if(m<10){
+	        		sb.append("0");
+	        	}
+	        	sb.append(m);
+	 
+		        return 	sb.toString();	        	
 			}
 	
 

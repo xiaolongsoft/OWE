@@ -26,9 +26,10 @@
     </foreach>
   </insert>
   <select id="selectAnalyze"  resultType="com.demo.entity.Analyze">
-			SELECT lid id, lsum,ltime,nsum,ntime,lsum sum,ltime time FROM owe_${table}_view_last
-			LEFT JOIN owe_${table}_view_now 
-			ON  lid=nid
+		SELECT  l.lid id, nl.nsum lsum,nl.ntime ltime,n.nsum nsum,n.ntime ntime,l.lsum sum,l.ltime time, (nl.nsum-l.lsum) s  
+		FROM   owe_${table}_last   l    
+		LEFT JOIN owe_${table}_now  n  ON   l.lid=n.nid
+		LEFT JOIN  owe_${table0}_now  nl  ON  nl.nid=l.lid
   </select>
   
   	<update id="excuteSql"  parameterType="java.lang.String">

@@ -8,6 +8,14 @@ public class Analyze {
 		private String ntime;
 		private Double sum;
 		private String time;
+		private String s;
+		
+		public String getS() {
+			return s;
+		}
+		public void setS(String s) {
+			this.s = s;
+		}
 		public String getId() {
 			return id;
 		}
