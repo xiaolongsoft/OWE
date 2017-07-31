@@ -18,7 +18,9 @@ import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;  
 import org.apache.poi.ss.usermodel.Sheet;  
 import org.apache.poi.ss.usermodel.Workbook;  
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;  
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import com.demo.entity.Bill;  
   
 /** 
  * 读取 excel表格，兼容2003和2007 
@@ -285,5 +287,55 @@ public class ReadExcel {
      */  
     public static boolean isExcel2007(String filePath) {  
         return filePath.matches("^.+\\.(?i)(xlsx)$");  
-    }  
+    } 
+	/**
+	 * 读取excel文件内容
+	 * @return
+	 */
+	public static List<Bill>   readExeclData(String filePath){
+        ReadExcel re = new ReadExcel();  
+        List<List<String>> list = re.read(System.getProperty("user.dir")+"/src/qfFile/"+filePath,1);//忽略前5行  
+        List<Bill>  bills=new ArrayList<Bill>();
+        // 遍历读取结果  
+        if (list != null) {  
+        		Bill b=null;
+            for (int i = 1; i < list.size(); i++) {  
+                List<String> cellList = list.get(i);  
+                //过滤非挂机短信类
+               if(!("挂机短信费".equals(cellList.get(9))&&(cellList.get(0).startsWith("0106")||cellList.get(0).startsWith("0108")||cellList.get(0).startsWith("1")))) continue;
+                b=new Bill();
+                	//用户号码
+                	b.setGroupid(cellList.get(0));
+                	//用户标识、
+                	b.setUser_state(cellList.get(1));
+                	//客户名称
+                	b.setUser_name(cellList.get(2));
+                	//融合固话
+                	b.set融合固话(cellList.get(3));
+                	//客户标识
+                	b.set客户标识(cellList.get(4));
+                	//账户名称
+                	b.setAccount_name(cellList.get(5));
+                	//账户标识	
+                	b.setAccount_state(cellList.get(6));
+                	//账期
+                	b.setStattime(cellList.get(7));
+                	//一级账单名称
+                	b.setBill_one(cellList.get(8));
+                	//二级账单名称
+                	b.setBill_two(cellList.get(9));
+                	//三级账单名称
+                	b.setBill_three(cellList.get(10));
+                	//三级账单ID
+                	b.setBill_three_id(cellList.get(11));
+                	//三级账单欠费金额
+                	if(cellList.get(12)!=null&&cellList.get(12)!=""){
+                		b.setBill_three_qf(Double.valueOf(cellList.get(12)));
+                	}
+                	bills.add(b);
+            }  
+        }
+        return bills;
+	}
+    
 }  

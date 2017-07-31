@@ -1,6 +1,5 @@
 package com.demo;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
@@ -11,7 +10,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 import com.demo.dao.BillDao;
 import com.demo.entity.Analyze;
-import com.demo.entity.Bill;
 import com.demo.utils.MyDateUtils;
 import com.demo.utils.MyExcelUtils;
 
@@ -45,7 +43,7 @@ public class OweApplication {
 			dao.excuteSql("   truncate table owe_all_tmp; "); // 1 .1  清空总表
 			dao.excuteSql("   truncate table owe_gh_tmp; ");  //1.2清空固话表
 			dao.excuteSql("   truncate table owe_jth_tmp; "); //1.3清空集团号表
-    		dao.insertBills(readExeclData(filePath));                // 2  插入总数据
+    		dao.insertBills(ReadExcel.readExeclData(filePath));                // 2  插入总数据
     		
     		System.out.println("LoadData Finished:"+(System.currentTimeMillis()-start));
     		start=System.currentTimeMillis();
@@ -78,59 +76,24 @@ public class OweApplication {
     		MyExcelUtils.writeToExcel(changeListToArr(gh), "固话欠费-上月本月对比("+mon+"经分).xlsx");
     		List<Analyze> jth=dao.selectAnalyze("jth"+mon,"jth"+MyDateUtils.getLastMon(mon));
     		MyExcelUtils.writeToExcel(changeListToArr(jth),"集团号欠费-上月本月对比("+mon+"经分).xlsx");
-    		System.out.println("All Finished:"+(System.currentTimeMillis()-start));
+    		
+    		System.out.println("save in his....");
+    		dao.excuteSql("INSERT INTO	`t_qianfei_cuijiao_his` SELECT * FROM `t_qianfei_cuijiao` ");
+    		dao.excuteSql("  truncate table t_qianfei_cuijiao; ");
+			dao.excuteSql(" DROP VIEW IF EXISTS `tmp_qianfei_view` ");
+			StringBuilder sb=new StringBuilder("CREATE VIEW `tmp_qianfei_view` AS  SELECT  `owe_all_tmp`.`user_state` AS `a1`,");
+			sb.append("SUBSTR(`owe_all_tmp`.`groupid`, '4') AS `a2`,");
+			sb.append("SUM(`owe_all_tmp`.`bill_three_qf`) AS `a3`,");
+			sb.append("`owe_all_tmp`.`account_name` AS `a4` FROM `owe_all_tmp` WHERE (");
+			sb.append("  `owe_all_tmp`.`bill_two` = '挂机短信费' ) GROUP BY `owe_all_tmp`.`user_state` ");
+			dao.excuteSql(sb.toString());
+			dao.excuteSql("INSERT INTO `t_qianfei_cuijiao`  (user_state,number,total_price,REAL_NAME )    SELECT a1,a2,a3,a4 FROM `tmp_qianfei_view`");
+			dao.excuteSql("UPDATE  t_qianfei_cuijiao SET batchId='"+mon+"'");
+			System.out.println("All Finished:"+(System.currentTimeMillis()-start));
     		
 	}
 	
-	/**
-	 * 读取excel文件内容
-	 * @return
-	 */
-	public static List<Bill>   readExeclData(String filePath){
-        ReadExcel re = new ReadExcel();  
-        List<List<String>> list = re.read(System.getProperty("user.dir")+"/src/qfFile/"+filePath,1);//忽略前5行  
-        List<Bill>  bills=new ArrayList<Bill>();
-        // 遍历读取结果  
-        if (list != null) {  
-        		Bill b=null;
-            for (int i = 1; i < list.size(); i++) {  
-                List<String> cellList = list.get(i);  
-                //过滤非挂机短信类
-               if(!("挂机短信费".equals(cellList.get(9))&&(cellList.get(0).startsWith("0106")||cellList.get(0).startsWith("0108")||cellList.get(0).startsWith("1")))) continue;
-                b=new Bill();
-                	//用户号码
-                	b.setGroupid(cellList.get(0));
-                	//用户标识、
-                	b.setUser_state(cellList.get(1));
-                	//客户名称
-                	b.setUser_name(cellList.get(2));
-                	//融合固话
-                	b.set融合固话(cellList.get(3));
-                	//客户标识
-                	b.set客户标识(cellList.get(4));
-                	//账户名称
-                	b.setAccount_name(cellList.get(5));
-                	//账户标识	
-                	b.setAccount_state(cellList.get(6));
-                	//账期
-                	b.setStattime(cellList.get(7));
-                	//一级账单名称
-                	b.setBill_one(cellList.get(8));
-                	//二级账单名称
-                	b.setBill_two(cellList.get(9));
-                	//三级账单名称
-                	b.setBill_three(cellList.get(10));
-                	//三级账单ID
-                	b.setBill_three_id(cellList.get(11));
-                	//三级账单欠费金额
-                	if(cellList.get(12)!=null&&cellList.get(12)!=""){
-                		b.setBill_three_qf(Double.valueOf(cellList.get(12)));
-                	}
-                	bills.add(b);
-            }  
-        }
-        return bills;
-	}
+
 	
 		public static List<String[]> changeListToArr(List<Analyze> list){
 			 List<String[]>  arr=new LinkedList<String[]>();
