@@ -37,6 +37,7 @@ import com.alibaba.druid.support.jconsole.DruidPanel;
 import com.demo.ReadExcel;
 import com.demo.dao.BillDao;
 import com.demo.entity.Bill;
+import com.demo.utils.MyDateUtils;
 import com.demo.utils.MyExcelUtils;  
   
 /** 
@@ -48,12 +49,8 @@ import com.demo.utils.MyExcelUtils;
 public class TestReadExcel {  
   
     public static void main(String[] args) throws Exception {  
-    	Scanner sc=new Scanner(System.in);
-    	String s=	sc.nextLine();
-		System.out.println(s);
-		String s2=sc.next();
-		System.out.println(s2);
-		sc.close();
+    	List list=ReadExcel.readExeclData("201802欠费汇总3月.xlsx");
+    	System.out.println(list.size());
 	
     } 
     

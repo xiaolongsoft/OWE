@@ -145,7 +145,7 @@ public class ReadExcel {
      * @return：List 
      */  
     public List<List<String>> read(InputStream inputStream, boolean isExcel2003, int ignoreRows) {  
-        List<List<String>> dataLst = null;  
+      
         try {  
   
             /** 根据版本选择创建Workbook的方式 */  
@@ -156,13 +156,13 @@ public class ReadExcel {
             } else {  
                 wb = new XSSFWorkbook(inputStream);  
             }  
-            dataLst = read(wb, ignoreRows);  
+            return read(wb, ignoreRows);  
   
         } catch (IOException e) {  
             e.printStackTrace();  
         }  
   
-        return dataLst;  
+        return null;  
     }  
   
     /** 
@@ -189,7 +189,7 @@ public class ReadExcel {
         /** 循环Excel的行，不从表格的第一行循环，去掉忽略的行数*/  
         for (int r = ignoreRows; r < this.totalRows; r++) {  
             Row row = sheet.getRow(r);  
-  
+            	System.out.println(r);
             if (row == null) {  
                 continue;  
             }  
@@ -294,12 +294,12 @@ public class ReadExcel {
 	 */
 	public static List<Bill>   readExeclData(String filePath){
         ReadExcel re = new ReadExcel();  
-        List<List<String>> list = re.read(System.getProperty("user.dir")+"/src/qfFile/"+filePath,1);//忽略前5行  
+        List<List<String>> list = re.read(System.getProperty("user.dir")+"/src/qfFile/"+filePath,1);//忽略前1行  
         List<Bill>  bills=new ArrayList<Bill>();
         // 遍历读取结果  
         if (list != null) {  
         		Bill b=null;
-            for (int i = 1; i < list.size(); i++) {  
+            for (int i = 0; i < list.size(); i++) {  
                 List<String> cellList = list.get(i);  
                 //过滤非挂机短信类
                if(!("挂机短信费".equals(cellList.get(9))&&(cellList.get(0).startsWith("0106")||cellList.get(0).startsWith("0108")||cellList.get(0).startsWith("1")))) continue;

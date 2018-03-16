@@ -44,7 +44,6 @@ public class OweApplication {
 			dao.excuteSql("   truncate table owe_gh_tmp; ");  //1.2清空固话表
 			dao.excuteSql("   truncate table owe_jth_tmp; "); //1.3清空集团号表
     		dao.insertBills(ReadExcel.readExeclData(filePath));                // 2  插入总数据
-    		
     		System.out.println("LoadData Finished:"+(System.currentTimeMillis()-start));
     		start=System.currentTimeMillis();
     		dao.excuteSql(" INSERT INTO `owe_gh_tmp` SELECT * FROM `owe_all_tmp` WHERE LENGTH(groupid)=11; "); //3.1插入固话表       
@@ -78,17 +77,21 @@ public class OweApplication {
     		MyExcelUtils.writeToExcel(changeListToArr(jth),"集团号欠费-上月本月对比("+mon+"经分).xlsx");
     		
     		System.out.println("save in his....");
-    		dao.excuteSql("INSERT INTO	`t_qianfei_cuijiao_his` SELECT * FROM `t_qianfei_cuijiao` ");
-    		dao.excuteSql("  truncate table t_qianfei_cuijiao; ");
-			dao.excuteSql(" DROP VIEW IF EXISTS `tmp_qianfei_view` ");
-			StringBuilder sb=new StringBuilder("CREATE VIEW `tmp_qianfei_view` AS  SELECT  `owe_all_tmp`.`user_state` AS `a1`,");
-			sb.append("SUBSTR(`owe_all_tmp`.`groupid`, '4') AS `a2`,");
-			sb.append("SUM(`owe_all_tmp`.`bill_three_qf`) AS `a3`,");
-			sb.append("`owe_all_tmp`.`account_name` AS `a4` FROM `owe_all_tmp` WHERE (");
-			sb.append("  `owe_all_tmp`.`bill_two` = '挂机短信费' ) GROUP BY `owe_all_tmp`.`user_state` ");
-			dao.excuteSql(sb.toString());
-			dao.excuteSql("INSERT INTO `t_qianfei_cuijiao`  (user_state,number,total_price,REAL_NAME )    SELECT a1,a2,a3,a4 FROM `tmp_qianfei_view`");
-			dao.excuteSql("UPDATE  t_qianfei_cuijiao SET batchId='"+mon+"'");
+    		
+    		if(dao.findBatchIdFromHis(mon)==0){
+    			dao.excuteSql(" DROP VIEW IF EXISTS `tmp_qianfei_view` ");
+    			StringBuilder sb=new StringBuilder("CREATE VIEW `tmp_qianfei_view` AS  SELECT  `owe_all_tmp`.`user_state` AS `a1`,");
+    			sb.append("SUBSTR(`owe_all_tmp`.`groupid`, '4') AS `a2`,");
+    			sb.append("SUM(`owe_all_tmp`.`bill_three_qf`) AS `a3`,");
+    			sb.append("`owe_all_tmp`.`account_name` AS `a4` FROM `owe_all_tmp` WHERE (");
+    			sb.append("  `owe_all_tmp`.`bill_two` = '挂机短信费' ) GROUP BY `owe_all_tmp`.`user_state` ");
+    			dao.excuteSql(sb.toString());
+    			dao.excuteSql("INSERT INTO `t_qianfei_cuijiao`  (user_state,number,total_price,REAL_NAME )    SELECT a1,a2,a3,a4 FROM `tmp_qianfei_view`");
+    			dao.excuteSql("UPDATE  t_qianfei_cuijiao SET batchId='"+mon+"'");
+    			
+        		dao.excuteSql("INSERT INTO	`t_qianfei_cuijiao_his` SELECT * FROM `t_qianfei_cuijiao` ");
+        		dao.excuteSql("  truncate table t_qianfei_cuijiao; ");	
+    		};
 			System.out.println("All Finished:"+(System.currentTimeMillis()-start));
     		
 	}
